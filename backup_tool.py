@@ -47,10 +47,10 @@ def format_mtime(ts: float) -> str:
 
 def format_reason(reason: str) -> str:
     mapping = {
-        "NEW": "新增（目标缺失）",
-        "UPDATED": "已更新（需要复制）",
-        "EXISTS_DST": "已存在（无需复制）",
-        "EXTRA_DST": "目标多余（仅预览）",
+        "NEW": "源目录新增（目标缺失）",
+        "UPDATED": "源目录更新（建议复制）",
+        "EXISTS_DST": "源目标均有（无需复制）",
+        "EXTRA_DST": "目标目录独有（源目录没有）",
     }
     return mapping.get(reason, reason)
 
@@ -162,7 +162,7 @@ def scan_incremental_candidates(src_dir: str, dst_dir: str) -> list[DiffItem]:
                     mtime=dst_stat.st_mtime,
                     selected=False,
                     copyable=False,
-                    category="目标多余(仅预览)",
+                    category="目标目录独有(仅预览)",
                 )
             )
 
@@ -336,7 +336,8 @@ class ScienceBackupApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("预览增量备份助手")
-        self.root.geometry("1280x860")
+        self.root.geometry("1700x980")
+        self.root.minsize(1560, 900)
 
         self.src_var = tk.StringVar()
         self.dst_var = tk.StringVar()
@@ -345,7 +346,7 @@ class ScienceBackupApp:
         self.verify_mode_var = tk.StringVar(value=VERIFY_QUICK)
         self.status_var = tk.StringVar(value="就绪")
         self.counter_var = tk.StringVar(
-            value="差异 0 | 可复制 0 | 左列只读 0 | 右列仅预览 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）"
+            value="差异 0 | 可复制 0 | 左列只读 0 | 右列独有 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）"
         )
 
         self.all_items: list[DiffItem] = []
@@ -357,15 +358,15 @@ class ScienceBackupApp:
         self.preview_sort_col = "path"
         self.preview_sort_desc = False
 
-        self.base_font = ("Microsoft YaHei UI", 12)
-        self.tree_font = ("Consolas", 11)
-        self.tree_header_font = ("Microsoft YaHei UI", 12, "bold")
+        self.base_font = ("Microsoft YaHei UI", 14)
+        self.tree_font = ("Consolas", 13)
+        self.tree_header_font = ("Microsoft YaHei UI", 14, "bold")
         self.setup_ui()
 
     def setup_ui(self) -> None:
         style = ttk.Style(self.root)
         style.configure(".", font=self.base_font)
-        style.configure("Treeview", font=self.tree_font, rowheight=30)
+        style.configure("Treeview", font=self.tree_font, rowheight=34)
         style.configure("Treeview.Heading", font=self.tree_header_font)
         self.root.option_add("*Font", self.base_font)
 
@@ -376,11 +377,11 @@ class ScienceBackupApp:
         path_frame.pack(fill=tk.X, pady=(0, 8))
 
         ttk.Label(path_frame, text="源目录:").grid(row=0, column=0, sticky="w")
-        ttk.Entry(path_frame, textvariable=self.src_var, width=100).grid(row=0, column=1, padx=6, sticky="we")
+        ttk.Entry(path_frame, textvariable=self.src_var, width=120).grid(row=0, column=1, padx=6, sticky="we")
         ttk.Button(path_frame, text="浏览", command=self.select_src).grid(row=0, column=2, padx=(0, 4))
 
         ttk.Label(path_frame, text="目标目录:").grid(row=1, column=0, sticky="w", pady=(8, 0))
-        ttk.Entry(path_frame, textvariable=self.dst_var, width=100).grid(row=1, column=1, padx=6, pady=(8, 0), sticky="we")
+        ttk.Entry(path_frame, textvariable=self.dst_var, width=120).grid(row=1, column=1, padx=6, pady=(8, 0), sticky="we")
         ttk.Button(path_frame, text="浏览", command=self.select_dst).grid(row=1, column=2, padx=(0, 4), pady=(8, 0))
         path_frame.columnconfigure(1, weight=1)
 
@@ -388,9 +389,9 @@ class ScienceBackupApp:
         rule_frame.pack(fill=tk.X, pady=(0, 8))
 
         ttk.Label(rule_frame, text="扩展名过滤(逗号分隔):").grid(row=0, column=0, sticky="w")
-        ttk.Entry(rule_frame, textvariable=self.ext_filter_var, width=36).grid(row=0, column=1, padx=(6, 10), sticky="w")
+        ttk.Entry(rule_frame, textvariable=self.ext_filter_var, width=44).grid(row=0, column=1, padx=(6, 10), sticky="w")
         ttk.Label(rule_frame, text="关键词过滤:").grid(row=0, column=2, sticky="w")
-        ttk.Entry(rule_frame, textvariable=self.keyword_filter_var, width=28).grid(row=0, column=3, padx=(6, 10), sticky="w")
+        ttk.Entry(rule_frame, textvariable=self.keyword_filter_var, width=36).grid(row=0, column=3, padx=(6, 10), sticky="w")
 
         self.apply_filter_btn = ttk.Button(rule_frame, text="应用过滤并全选结果", command=self.apply_filters)
         self.apply_filter_btn.grid(row=0, column=4, padx=(0, 6))
@@ -438,9 +439,9 @@ class ScienceBackupApp:
         preview_container.pack(fill=tk.BOTH, expand=True)
 
         left_frame = ttk.LabelFrame(preview_container, text="左列：源->目标（可复制，支持勾选）", padding=8)
-        right_frame = ttk.LabelFrame(preview_container, text="右列：目标多余（仅预览，不复制）", padding=8)
-        preview_container.add(left_frame, weight=3)
-        preview_container.add(right_frame, weight=2)
+        right_frame = ttk.LabelFrame(preview_container, text="右列：目标目录独有文件（源目录没有，仅查看）", padding=8)
+        preview_container.add(left_frame, weight=4)
+        preview_container.add(right_frame, weight=3)
 
         left_columns = ("selected", "reason", "size", "mtime", "path")
         self.copy_tree = ttk.Treeview(
@@ -449,11 +450,11 @@ class ScienceBackupApp:
             show="headings",
             selectmode="extended",
         )
-        self.copy_tree.column("selected", width=60, anchor="center", stretch=False)
-        self.copy_tree.column("reason", width=100, anchor="center", stretch=False)
-        self.copy_tree.column("size", width=110, anchor="e", stretch=False)
-        self.copy_tree.column("mtime", width=170, anchor="center", stretch=False)
-        self.copy_tree.column("path", width=620, anchor="w")
+        self.copy_tree.column("selected", width=68, anchor="center", stretch=False)
+        self.copy_tree.column("reason", width=210, anchor="center", stretch=False)
+        self.copy_tree.column("size", width=120, anchor="e", stretch=False)
+        self.copy_tree.column("mtime", width=180, anchor="center", stretch=False)
+        self.copy_tree.column("path", width=880, anchor="w")
 
         left_y_scroll = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.copy_tree.yview)
         left_x_scroll = ttk.Scrollbar(left_frame, orient=tk.HORIZONTAL, command=self.copy_tree.xview)
@@ -471,10 +472,10 @@ class ScienceBackupApp:
             show="headings",
             selectmode="browse",
         )
-        self.preview_tree.column("reason", width=110, anchor="center", stretch=False)
-        self.preview_tree.column("size", width=110, anchor="e", stretch=False)
-        self.preview_tree.column("mtime", width=170, anchor="center", stretch=False)
-        self.preview_tree.column("path", width=420, anchor="w")
+        self.preview_tree.column("reason", width=220, anchor="center", stretch=False)
+        self.preview_tree.column("size", width=120, anchor="e", stretch=False)
+        self.preview_tree.column("mtime", width=180, anchor="center", stretch=False)
+        self.preview_tree.column("path", width=640, anchor="w")
 
         right_y_scroll = ttk.Scrollbar(right_frame, orient=tk.VERTICAL, command=self.preview_tree.yview)
         right_x_scroll = ttk.Scrollbar(right_frame, orient=tk.HORIZONTAL, command=self.preview_tree.xview)
@@ -525,7 +526,7 @@ class ScienceBackupApp:
         self.status_var.set("正在扫描差异文件，请稍候...")
         self.copy_tree.delete(*self.copy_tree.get_children())
         self.preview_tree.delete(*self.preview_tree.get_children())
-        self.counter_var.set("差异 0 | 可复制 0 | 左列只读 0 | 右列仅预览 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）")
+        self.counter_var.set("差异 0 | 可复制 0 | 左列只读 0 | 右列独有 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）")
 
         def worker() -> None:
             try:
@@ -552,7 +553,7 @@ class ScienceBackupApp:
             )
             right_preview_count = sum(1 for item in items if item.category != "源->目标")
             self.status_var.set(
-                f"扫描完成：可复制 {copyable_count} 个，左列只读 {left_readonly_count} 个，右列目标多余 {right_preview_count} 个。"
+                f"扫描完成：可复制 {copyable_count} 个，左列只读 {left_readonly_count} 个，右列独有文件 {right_preview_count} 个。"
             )
 
     def on_scan_failed(self, error_msg: str) -> None:
@@ -721,7 +722,7 @@ class ScienceBackupApp:
         self.counter_var.set(
             "差异 "
             f"{total} | 可复制 {copyable_total} | 左列只读 {left_readonly_total} | "
-            f"右列仅预览 {right_preview_total} | "
+            f"右列独有 {right_preview_total} | "
             f"左侧显示 {left_visible} | 右侧显示 {right_visible} | "
             f"已勾选复制 {selected_total}（左侧显示中 {selected_left_visible}）"
         )
