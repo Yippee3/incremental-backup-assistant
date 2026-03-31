@@ -1,4 +1,4 @@
-﻿# -*- mode: python ; coding: utf-8 -*-
+# -*- mode: python ; coding: utf-8 -*-
 
 
 a = Analysis(
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='\u9884\u89c8\u589e\u91cf\u5907\u4efd\u52a9\u624b_\u5355\u6587\u4ef6',
+    name='预览增量备份助手_单文件',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
