@@ -336,7 +336,8 @@ class ScienceBackupApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("预览增量备份助手")
-        self.root.geometry("1360x920")
+        self.root.geometry("1700x980")
+        self.root.minsize(1560, 900)
 
         self.src_var = tk.StringVar()
         self.dst_var = tk.StringVar()
@@ -376,11 +377,11 @@ class ScienceBackupApp:
         path_frame.pack(fill=tk.X, pady=(0, 8))
 
         ttk.Label(path_frame, text="源目录:").grid(row=0, column=0, sticky="w")
-        ttk.Entry(path_frame, textvariable=self.src_var, width=100).grid(row=0, column=1, padx=6, sticky="we")
+        ttk.Entry(path_frame, textvariable=self.src_var, width=120).grid(row=0, column=1, padx=6, sticky="we")
         ttk.Button(path_frame, text="浏览", command=self.select_src).grid(row=0, column=2, padx=(0, 4))
 
         ttk.Label(path_frame, text="目标目录:").grid(row=1, column=0, sticky="w", pady=(8, 0))
-        ttk.Entry(path_frame, textvariable=self.dst_var, width=100).grid(row=1, column=1, padx=6, pady=(8, 0), sticky="we")
+        ttk.Entry(path_frame, textvariable=self.dst_var, width=120).grid(row=1, column=1, padx=6, pady=(8, 0), sticky="we")
         ttk.Button(path_frame, text="浏览", command=self.select_dst).grid(row=1, column=2, padx=(0, 4), pady=(8, 0))
         path_frame.columnconfigure(1, weight=1)
 
@@ -388,9 +389,9 @@ class ScienceBackupApp:
         rule_frame.pack(fill=tk.X, pady=(0, 8))
 
         ttk.Label(rule_frame, text="扩展名过滤(逗号分隔):").grid(row=0, column=0, sticky="w")
-        ttk.Entry(rule_frame, textvariable=self.ext_filter_var, width=36).grid(row=0, column=1, padx=(6, 10), sticky="w")
+        ttk.Entry(rule_frame, textvariable=self.ext_filter_var, width=44).grid(row=0, column=1, padx=(6, 10), sticky="w")
         ttk.Label(rule_frame, text="关键词过滤:").grid(row=0, column=2, sticky="w")
-        ttk.Entry(rule_frame, textvariable=self.keyword_filter_var, width=28).grid(row=0, column=3, padx=(6, 10), sticky="w")
+        ttk.Entry(rule_frame, textvariable=self.keyword_filter_var, width=36).grid(row=0, column=3, padx=(6, 10), sticky="w")
 
         self.apply_filter_btn = ttk.Button(rule_frame, text="应用过滤并全选结果", command=self.apply_filters)
         self.apply_filter_btn.grid(row=0, column=4, padx=(0, 6))
@@ -439,8 +440,8 @@ class ScienceBackupApp:
 
         left_frame = ttk.LabelFrame(preview_container, text="左列：源->目标（可复制，支持勾选）", padding=8)
         right_frame = ttk.LabelFrame(preview_container, text="右列：目标目录独有文件（源目录没有，仅查看）", padding=8)
-        preview_container.add(left_frame, weight=3)
-        preview_container.add(right_frame, weight=2)
+        preview_container.add(left_frame, weight=4)
+        preview_container.add(right_frame, weight=3)
 
         left_columns = ("selected", "reason", "size", "mtime", "path")
         self.copy_tree = ttk.Treeview(
@@ -449,11 +450,11 @@ class ScienceBackupApp:
             show="headings",
             selectmode="extended",
         )
-        self.copy_tree.column("selected", width=60, anchor="center", stretch=False)
-        self.copy_tree.column("reason", width=100, anchor="center", stretch=False)
-        self.copy_tree.column("size", width=110, anchor="e", stretch=False)
-        self.copy_tree.column("mtime", width=170, anchor="center", stretch=False)
-        self.copy_tree.column("path", width=620, anchor="w")
+        self.copy_tree.column("selected", width=68, anchor="center", stretch=False)
+        self.copy_tree.column("reason", width=210, anchor="center", stretch=False)
+        self.copy_tree.column("size", width=120, anchor="e", stretch=False)
+        self.copy_tree.column("mtime", width=180, anchor="center", stretch=False)
+        self.copy_tree.column("path", width=880, anchor="w")
 
         left_y_scroll = ttk.Scrollbar(left_frame, orient=tk.VERTICAL, command=self.copy_tree.yview)
         left_x_scroll = ttk.Scrollbar(left_frame, orient=tk.HORIZONTAL, command=self.copy_tree.xview)
@@ -471,10 +472,10 @@ class ScienceBackupApp:
             show="headings",
             selectmode="browse",
         )
-        self.preview_tree.column("reason", width=110, anchor="center", stretch=False)
-        self.preview_tree.column("size", width=110, anchor="e", stretch=False)
-        self.preview_tree.column("mtime", width=170, anchor="center", stretch=False)
-        self.preview_tree.column("path", width=420, anchor="w")
+        self.preview_tree.column("reason", width=220, anchor="center", stretch=False)
+        self.preview_tree.column("size", width=120, anchor="e", stretch=False)
+        self.preview_tree.column("mtime", width=180, anchor="center", stretch=False)
+        self.preview_tree.column("path", width=640, anchor="w")
 
         right_y_scroll = ttk.Scrollbar(right_frame, orient=tk.VERTICAL, command=self.preview_tree.yview)
         right_x_scroll = ttk.Scrollbar(right_frame, orient=tk.HORIZONTAL, command=self.preview_tree.xview)
