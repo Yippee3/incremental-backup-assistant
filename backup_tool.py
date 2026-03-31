@@ -47,10 +47,10 @@ def format_mtime(ts: float) -> str:
 
 def format_reason(reason: str) -> str:
     mapping = {
-        "NEW": "新增（目标缺失）",
-        "UPDATED": "已更新（需要复制）",
-        "EXISTS_DST": "已存在（无需复制）",
-        "EXTRA_DST": "目标多余（仅预览）",
+        "NEW": "源目录新增（目标缺失）",
+        "UPDATED": "源目录更新（建议复制）",
+        "EXISTS_DST": "源目标均有（无需复制）",
+        "EXTRA_DST": "目标目录独有（源目录没有）",
     }
     return mapping.get(reason, reason)
 
@@ -162,7 +162,7 @@ def scan_incremental_candidates(src_dir: str, dst_dir: str) -> list[DiffItem]:
                     mtime=dst_stat.st_mtime,
                     selected=False,
                     copyable=False,
-                    category="目标多余(仅预览)",
+                    category="目标目录独有(仅预览)",
                 )
             )
 
@@ -336,7 +336,7 @@ class ScienceBackupApp:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("预览增量备份助手")
-        self.root.geometry("1280x860")
+        self.root.geometry("1360x920")
 
         self.src_var = tk.StringVar()
         self.dst_var = tk.StringVar()
@@ -345,7 +345,7 @@ class ScienceBackupApp:
         self.verify_mode_var = tk.StringVar(value=VERIFY_QUICK)
         self.status_var = tk.StringVar(value="就绪")
         self.counter_var = tk.StringVar(
-            value="差异 0 | 可复制 0 | 左列只读 0 | 右列仅预览 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）"
+            value="差异 0 | 可复制 0 | 左列只读 0 | 右列独有 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）"
         )
 
         self.all_items: list[DiffItem] = []
@@ -357,15 +357,15 @@ class ScienceBackupApp:
         self.preview_sort_col = "path"
         self.preview_sort_desc = False
 
-        self.base_font = ("Microsoft YaHei UI", 12)
-        self.tree_font = ("Consolas", 11)
-        self.tree_header_font = ("Microsoft YaHei UI", 12, "bold")
+        self.base_font = ("Microsoft YaHei UI", 14)
+        self.tree_font = ("Consolas", 13)
+        self.tree_header_font = ("Microsoft YaHei UI", 14, "bold")
         self.setup_ui()
 
     def setup_ui(self) -> None:
         style = ttk.Style(self.root)
         style.configure(".", font=self.base_font)
-        style.configure("Treeview", font=self.tree_font, rowheight=30)
+        style.configure("Treeview", font=self.tree_font, rowheight=34)
         style.configure("Treeview.Heading", font=self.tree_header_font)
         self.root.option_add("*Font", self.base_font)
 
@@ -438,7 +438,7 @@ class ScienceBackupApp:
         preview_container.pack(fill=tk.BOTH, expand=True)
 
         left_frame = ttk.LabelFrame(preview_container, text="左列：源->目标（可复制，支持勾选）", padding=8)
-        right_frame = ttk.LabelFrame(preview_container, text="右列：目标多余（仅预览，不复制）", padding=8)
+        right_frame = ttk.LabelFrame(preview_container, text="右列：目标目录独有文件（源目录没有，仅查看）", padding=8)
         preview_container.add(left_frame, weight=3)
         preview_container.add(right_frame, weight=2)
 
@@ -525,7 +525,7 @@ class ScienceBackupApp:
         self.status_var.set("正在扫描差异文件，请稍候...")
         self.copy_tree.delete(*self.copy_tree.get_children())
         self.preview_tree.delete(*self.preview_tree.get_children())
-        self.counter_var.set("差异 0 | 可复制 0 | 左列只读 0 | 右列仅预览 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）")
+        self.counter_var.set("差异 0 | 可复制 0 | 左列只读 0 | 右列独有 0 | 左侧显示 0 | 右侧显示 0 | 已勾选复制 0（左侧显示中 0）")
 
         def worker() -> None:
             try:
@@ -552,7 +552,7 @@ class ScienceBackupApp:
             )
             right_preview_count = sum(1 for item in items if item.category != "源->目标")
             self.status_var.set(
-                f"扫描完成：可复制 {copyable_count} 个，左列只读 {left_readonly_count} 个，右列目标多余 {right_preview_count} 个。"
+                f"扫描完成：可复制 {copyable_count} 个，左列只读 {left_readonly_count} 个，右列独有文件 {right_preview_count} 个。"
             )
 
     def on_scan_failed(self, error_msg: str) -> None:
@@ -721,7 +721,7 @@ class ScienceBackupApp:
         self.counter_var.set(
             "差异 "
             f"{total} | 可复制 {copyable_total} | 左列只读 {left_readonly_total} | "
-            f"右列仅预览 {right_preview_total} | "
+            f"右列独有 {right_preview_total} | "
             f"左侧显示 {left_visible} | 右侧显示 {right_visible} | "
             f"已勾选复制 {selected_total}（左侧显示中 {selected_left_visible}）"
         )
