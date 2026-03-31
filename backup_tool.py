@@ -769,6 +769,23 @@ class ScienceBackupApp:
             messagebox.showwarning("提示", "当前没有可复制且已勾选的文件。")
             return
 
+        mode_text = "安全模式（MD5+CSV日志）" if mode == VERIFY_SECURE else "快速模式（仅复制）"
+        confirmed = messagebox.askyesno(
+            "执行确认",
+            "\n".join(
+                [
+                    "请确认是否执行第 2 步：增量备份",
+                    f"待复制文件数：{len(selected_items)}",
+                    f"校验模式：{mode_text}",
+                    f"源目录：{src}",
+                    f"目标目录：{dst}",
+                ]
+            ),
+        )
+        if not confirmed:
+            self.status_var.set("已取消本次备份。")
+            return
+
         try:
             Path(dst).mkdir(parents=True, exist_ok=True)
         except OSError as exc:
